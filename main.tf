@@ -1,7 +1,9 @@
 provider "aws" {
     region = "us-east-1"
 
+
 }
+
 
 # 1. Create VPC
 resource "aws_vpc" "prodvpc" {
@@ -20,10 +22,15 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_route_table" "prod-route-table" {
     vpc_id = aws_vpc.prodvpc.id
 
-    route = {
+    route {
         cidr_block = "0.0.0.0/0"
         gateway_id =  aws_internet_gateway.gw.id
 
+    }
+
+    route {
+        ipv6_cidr_block = "::/0"
+        egress_only_gateway_id = aws_internet_gateway.gw.id
     }
   
     tags = {
@@ -78,7 +85,7 @@ resource "aws_security_group" "allow-web" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_block  = ["0.0.0.0/0"]
+    cidr_block  = "0.0.0.0/0"
   }
 
   egress {
@@ -94,29 +101,29 @@ resource "aws_security_group" "allow-web" {
 }
 # 7. Create a Network interface with an IP in the subnet that was created in step 4
 resource "aws_network_interface" "web-server-nic" {
-  subnet_id = aws_subnet.subnet-1.id
-  private_ip = "10.0.1.50"
+  subnet_id       = aws_subnet.subnet-1.id
+  private_ip      = "10.0.1.50"
   security_groups = [aws_security_group.allow-web.id]
 
 }
 
 # 8. Assign an elastic IP to the network interface created in step 7
-resource "aws_eip" "name" {
+resource "aws_eip" "one" {
   vpc                       = true
   network_interface         = aws_network_interface.web-server-nic.id
   associate_with_private_ip = "10.0.1.50"
-  depends_on = [aws_internet_gateway.gw]
+  depends_on                = aws_internet_gateway.gw
 }
 
 # 9. Create Ubuntu Server and install/enable apache2
 resource "aws_instance" "web-server-instance" {
-    ami = "ami-007855ac798b5175e"
-    instance_type = "t2.micro"
+    ami               = "ami-007855ac798b5175e"
+    instance_type     = "t2.micro"
     availability_zone = "us-east-1a"
-    key_name = "Main-key"
+    key_name          = "Main-key"
 
     network_interface {
-      device_index = 0
+      device_index         = 0
       network_interface_id = aws_network_interface.web-server-nic.id
     }
 
