@@ -29,7 +29,7 @@ resource "aws_route_table" "prod-route-table" {
     }
 
     route {
-        ipv6_cidr_block = "::/0"
+        ipv6_cidr_block        = "::/0"
         egress_only_gateway_id = aws_internet_gateway.gw.id
     }
   
@@ -71,28 +71,28 @@ resource "aws_security_group" "allow-web" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_block  = ["0.0.0.0/0"]
+    cidr_blocks  = ["0.0.0.0/0"]
   }
   ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_block  = ["0.0.0.0/0"]
+    cidr_blocks  = ["0.0.0.0/0"]
   }
   ingress {
     description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_block  = "0.0.0.0/0"
+    cidr_blocks  = ["0.0.0.0/0"]
   }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_block  =["0.0.0.0/0"]
+    cidr_blocks  =["0.0.0.0/0"]
   }
 
   tags = {
@@ -112,7 +112,7 @@ resource "aws_eip" "one" {
   vpc                       = true
   network_interface         = aws_network_interface.web-server-nic.id
   associate_with_private_ip = "10.0.1.50"
-  depends_on                = aws_internet_gateway.gw
+  depends_on                = [aws_internet_gateway.gw]
 }
 
 # 9. Create Ubuntu Server and install/enable apache2
